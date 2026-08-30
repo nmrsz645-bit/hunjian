@@ -13,7 +13,7 @@ $AliyunSubtitlesEnabled = $true
 $AliyunModel = 'paraformer-v2'
 $AliyunEndpoint = 'https://llm-5kjnipnd09ocidvh.cn-beijing.maas.aliyuncs.com/api/v1'
 $AliyunTimeoutMinutes = 30
-$WhisperModel = 'tiny'
+$WhisperModel = Join-Path $AutoCutRoot 'tools\models\ggml-tiny.bin'
 $WhisperLanguage = 'zh'
 $WhisperThreads = 4
 

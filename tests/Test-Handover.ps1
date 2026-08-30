@@ -11,6 +11,7 @@ $bytes = [IO.File]::ReadAllBytes($exampleConfig)
 Assert-True ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) '示例配置必须为Windows PowerShell 5.1可读的UTF-8 BOM'
 . $exampleConfig
 Assert-Equal (Join-Path $root '视频位置') $VideoDir '示例配置在Windows PowerShell中必须保留中文目录名'
+Assert-Equal (Join-Path $root 'tools\models\ggml-tiny.bin') $WhisperModel '示例配置必须指向便携Whisper模型文件'
 
 $integrationText = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'Test-Integration.ps1'), [Text.Encoding]::UTF8)
 Assert-True ($integrationText -match "config\.example\.ps1") '集成测试在没有个人配置时必须回退到示例配置'

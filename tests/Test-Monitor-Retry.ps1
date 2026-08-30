@@ -27,4 +27,37 @@ $audioDelete = $removeFunctionText.IndexOf('Remove-Item -LiteralPath $AudioPath'
 $textDelete = $removeFunctionText.IndexOf('Remove-Item -LiteralPath $textPath')
 if ($audioDelete -lt 0 -or $textDelete -lt 0 -or $audioDelete -ge $textDelete) { throw 'Source audio must be deleted before its sidecar TXT.' }
 if ($removeFunctionText -notmatch 'try\s*\{[\s\S]*Remove-Item -LiteralPath \$textPath' -or $removeFunctionText -notmatch '保留同名文本稿') { throw 'A failed sidecar deletion must preserve the TXT and only log a warning.' }
+
+function Get-SidecarTextPath($AudioPath) {
+    $candidate = [IO.Path]::ChangeExtension($AudioPath, '.txt')
+    if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
+    return $null
+}
+function Write-MonitorLog($Message, $Color) { }
+Invoke-Expression $removeFunctionAst.Extent.Text
+$cleanupRoot = Join-Path ([IO.Path]::GetTempPath()) ('monitor_sidecar_' + [guid]::NewGuid().ToString('N'))
+try {
+    New-Item -ItemType Directory -Path $cleanupRoot -Force | Out-Null
+    $audio = Join-Path $cleanupRoot 'normal.mp3'
+    $text = [IO.Path]::ChangeExtension($audio, '.txt')
+    [IO.File]::WriteAllText($audio, 'audio', [Text.Encoding]::UTF8)
+    [IO.File]::WriteAllText($text, 'sidecar', [Text.Encoding]::UTF8)
+    Remove-ProcessedAudio $audio
+    if ((Test-Path -LiteralPath $audio) -or (Test-Path -LiteralPath $text)) { throw 'Successful cleanup must remove both source audio and TXT.' }
+
+    $lockedAudio = Join-Path $cleanupRoot 'locked.mp3'
+    $lockedText = [IO.Path]::ChangeExtension($lockedAudio, '.txt')
+    [IO.File]::WriteAllText($lockedAudio, 'audio', [Text.Encoding]::UTF8)
+    [IO.File]::WriteAllText($lockedText, 'sidecar', [Text.Encoding]::UTF8)
+    $lock = [IO.File]::Open($lockedAudio, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+    try {
+        $failed = $false
+        try { Remove-ProcessedAudio $lockedAudio } catch { $failed = $true }
+        if (-not $failed -or -not (Test-Path -LiteralPath $lockedText)) { throw 'If source audio cannot be deleted, its TXT must remain.' }
+    } finally {
+        $lock.Dispose()
+    }
+} finally {
+    Remove-Item -LiteralPath $cleanupRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
 Write-Output 'PASS Test-Monitor-Retry'
