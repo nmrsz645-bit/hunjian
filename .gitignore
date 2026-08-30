@@ -1,0 +1,42 @@
+# User configuration and generated user data
+config.ps1
+config/
+logs/
+work/
+完成/
+失败音频/
+视频位置/
+音频位置/
+backups/
+banbenbeifen/
+
+# Local runtime and downloaded models. Copy these separately when handing over.
+tools/paraformer/runtime/
+tools/paraformer/model_cache/
+tools/paraformer/downloads/
+tools/paraformer/__pycache__/
+tools/ffmpeg/
+tools/whisper/
+tools/opencc/
+tools/models/
+
+# Build, release, and binary artifacts
+desktop-src/bin/
+desktop-src/obj/
+desktop-src/publish*/
+desktop-publish*/
+fonts/UserAdded/
+*.exe
+*.exe.bak_*
+*.dll
+*.pdb
+*.zip
+*.bak
+
+# Local IDE and operating-system files
+.vs/
+.vscode/
+*.user
+Thumbs.db
+Desktop.ini
+_git_staged_files.txt
