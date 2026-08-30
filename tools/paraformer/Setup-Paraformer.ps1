@@ -86,14 +86,14 @@ Write-SetupProgress '准备本地 Paraformer 安装环境'
 if ($PrecheckReason) { Write-SetupLog "PRECHECK_NOT_READY: $PrecheckReason" }
 Write-SetupLog '阶段：准备本地 Paraformer 安装环境。'
 $python = Join-Path $RuntimeDir 'python.exe'
+$downloadDir = Join-Path (Split-Path -Parent $RuntimeDir) 'downloads'
+$runtimeZip = Join-Path $downloadDir 'python-3.10.11-embed-amd64.zip'
+$getPip = Join-Path $downloadDir 'get-pip.py'
+$curl = Join-Path $env:SystemRoot 'System32\curl.exe'
+New-Item -ItemType Directory -Force -Path $downloadDir | Out-Null
+Write-SetupLog "下载工具：$curl"
+if (-not (Test-Path -LiteralPath $curl)) { throw '未找到 Windows curl.exe，无法下载 Python 运行环境。' }
 if (-not (Test-Path -LiteralPath $python)) {
-    $downloadDir = Join-Path (Split-Path -Parent $RuntimeDir) 'downloads'
-    $runtimeZip = Join-Path $downloadDir 'python-3.10.11-embed-amd64.zip'
-    $getPip = Join-Path $downloadDir 'get-pip.py'
-    $curl = Join-Path $env:SystemRoot 'System32\curl.exe'
-    New-Item -ItemType Directory -Force -Path $downloadDir | Out-Null
-    Write-SetupLog "下载工具：$curl"
-    if (-not (Test-Path -LiteralPath $curl)) { throw '未找到 Windows curl.exe，无法下载 Python 运行环境。' }
     if (-not (Test-Path -LiteralPath $runtimeZip)) {
         Write-SetupLog '阶段：下载 Python 3.10 便携运行环境。'
         Invoke-LoggedProcess $curl @('--fail', '--location', '--retry', '3', '--connect-timeout', '30', '--silent', '--show-error', '--output', $runtimeZip, 'https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip') 'Python 运行环境下载'
@@ -105,6 +105,15 @@ if (-not (Test-Path -LiteralPath $python)) {
     if (-not (Test-Path -LiteralPath $python)) { throw 'Python 便携版解压后未生成 python.exe。' }
     if (-not (Test-Path -LiteralPath $pthFile)) { throw 'Python 便携版缺少 python310._pth。' }
     [IO.File]::WriteAllLines($pthFile, @('python310.zip', '.', 'Lib\site-packages', 'import site'), [Text.Encoding]::ASCII)
+}
+
+$pthFile = Join-Path $RuntimeDir 'python310._pth'
+if (-not (Test-Path -LiteralPath $python)) { throw 'Python 便携版解压后未生成 python.exe。' }
+if (-not (Test-Path -LiteralPath $pthFile)) { throw 'Python 便携版缺少 python310._pth。' }
+[IO.File]::WriteAllLines($pthFile, @('python310.zip', '.', 'Lib\site-packages', 'import site'), [Text.Encoding]::ASCII)
+
+& $python '-m' 'pip' '--version' *> $null
+if ($LASTEXITCODE -ne 0) {
     if (-not (Test-Path -LiteralPath $getPip)) {
         Invoke-LoggedProcess $curl @('--fail', '--location', '--retry', '3', '--connect-timeout', '30', '--silent', '--show-error', '--output', $getPip, 'https://bootstrap.pypa.io/get-pip.py') 'pip 安装器下载'
         if (-not (Test-Path -LiteralPath $getPip)) { throw 'pip 安装器下载后未找到文件。' }
@@ -112,11 +121,6 @@ if (-not (Test-Path -LiteralPath $python)) {
     Write-SetupLog '阶段：初始化本地 pip。'
     Invoke-LoggedProcess $python @($getPip) 'pip 初始化'
 }
-
-$pthFile = Join-Path $RuntimeDir 'python310._pth'
-if (-not (Test-Path -LiteralPath $python)) { throw 'Python 便携版解压后未生成 python.exe。' }
-if (-not (Test-Path -LiteralPath $pthFile)) { throw 'Python 便携版缺少 python310._pth。' }
-[IO.File]::WriteAllLines($pthFile, @('python310.zip', '.', 'Lib\site-packages', 'import site'), [Text.Encoding]::ASCII)
 
 Write-SetupLog '阶段：升级 pip。'
 Invoke-Pip @('install', '--upgrade', 'pip')

@@ -27,5 +27,6 @@ Assert-True ($bootstrap.Contains('[switch]$SkipParaformer')) '新电脑配置脚
 Assert-True (-not $bootstrap.Contains('chajia\ffmpeg.zip')) '新电脑配置不能依赖旧电脑的 chajia 本地安装包'
 Assert-True ($paraformerSetup.Contains('& $FilePath @Arguments 1> $stdout 2> $stderr')) 'Paraformer安装器必须直接执行下载命令，避免Start-Process丢失退出码'
 Assert-True ($paraformerSetup.Contains('$exitCode = $LASTEXITCODE')) 'Paraformer安装器必须读取实际命令退出码'
+Assert-True ($paraformerSetup.Contains("& `$python '-m' 'pip' '--version' *> `$null")) 'Paraformer安装器必须在续传时检查pip是否完整'
 
 Write-Host 'PASS Test-NewComputerBootstrap' -ForegroundColor Green
