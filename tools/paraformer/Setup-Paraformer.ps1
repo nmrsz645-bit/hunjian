@@ -64,13 +64,15 @@ function Invoke-LoggedProcess([string]$FilePath, [string[]]$Arguments, [string]$
             Update-SetupProgressFromText $liveText $Name
             Start-Sleep -Milliseconds 500
         }
+        $process.WaitForExit()
+        $exitCode = $process.ExitCode
         foreach ($path in @($stdout, $stderr)) {
             if (Test-Path -LiteralPath $path) {
                 $content = Read-SharedText $path
                 if (-not [string]::IsNullOrWhiteSpace($content)) { [IO.File]::AppendAllText($LogPath, $content, [Text.UTF8Encoding]::new($true)) }
             }
         }
-        if ($process.ExitCode -ne 0) { throw "$Name 失败，退出码：$($process.ExitCode)" }
+        if ($exitCode -ne 0) { throw "$Name 失败，退出码：$exitCode" }
     } finally {
         Remove-Item -LiteralPath $stdout, $stderr -Force -ErrorAction SilentlyContinue
     }

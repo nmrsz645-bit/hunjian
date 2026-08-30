@@ -5,6 +5,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $bootstrapPath = Join-Path $root 'Initialize-NewComputer.ps1'
 Assert-True (Test-Path -LiteralPath $bootstrapPath -PathType Leaf) '新电脑必须提供一键依赖配置脚本'
 $bootstrap = [IO.File]::ReadAllText($bootstrapPath, [Text.Encoding]::UTF8)
+$paraformerSetup = [IO.File]::ReadAllText((Join-Path $root 'tools\paraformer\Setup-Paraformer.ps1'), [Text.Encoding]::UTF8)
 
 foreach ($expected in @(
     'config.example.ps1',
@@ -24,5 +25,6 @@ Assert-True ($bootstrap.Contains('.new-computer-bootstrap.pending')) 'Paraformer
 Assert-True ($bootstrap.Contains('not (Test-Path -LiteralPath $resumeMarker)')) '未知Paraformer不完整目录必须继续受保护'
 Assert-True ($bootstrap.Contains('[switch]$SkipParaformer')) '新电脑配置脚本必须允许独立验证非模型依赖'
 Assert-True (-not $bootstrap.Contains('chajia\ffmpeg.zip')) '新电脑配置不能依赖旧电脑的 chajia 本地安装包'
+Assert-True ($paraformerSetup.Contains('$process.WaitForExit()')) 'Paraformer安装器必须等待下载进程结束再读取退出码'
 
 Write-Host 'PASS Test-NewComputerBootstrap' -ForegroundColor Green
