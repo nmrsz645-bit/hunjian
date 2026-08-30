@@ -1394,6 +1394,33 @@ function New-ClipPlanItem($Source, [double]$Start, [double]$Duration, [bool]$IsI
     }
 }
 
+function Get-NonOverlappingClipStart([string]$SourcePath, [double]$SourceDuration, [double]$TakeSeconds, $PlannedClips) {
+    if ($TakeSeconds -le 0 -or $SourceDuration + 0.0001 -lt $TakeSeconds) { return $null }
+    $ranges = @()
+    $cursor = 0.0
+    $usedClips = @($PlannedClips | Where-Object { $_.Source.FullName -eq $SourcePath } | Sort-Object Start)
+    foreach ($usedClip in $usedClips) {
+        $usedStart = [Math]::Max(0.0, [double]$usedClip.Start)
+        $usedEnd = [Math]::Min($SourceDuration, $usedStart + [double]$usedClip.Duration)
+        if ($usedStart - $cursor + 0.0001 -ge $TakeSeconds) {
+            $ranges += [pscustomobject]@{ Start = $cursor; End = $usedStart }
+        }
+        $cursor = [Math]::Max($cursor, $usedEnd)
+    }
+    if ($SourceDuration - $cursor + 0.0001 -ge $TakeSeconds) {
+        $ranges += [pscustomobject]@{ Start = $cursor; End = $SourceDuration }
+    }
+    if ($ranges.Count -eq 0) { return $null }
+
+    # Pick an edge of the largest free range. Remaining capacity stays contiguous,
+    # so random starts cannot fragment a long source into unusable pieces.
+    $range = @($ranges | Sort-Object { $_.End - $_.Start } -Descending | Select-Object -First 1)[0]
+    $maxStart = [double]$range.End - $TakeSeconds
+    if ($maxStart -le [double]$range.Start + 0.0001) { return [double]$range.Start }
+    if ($random.Next(0, 2) -eq 0) { return [double]$range.Start }
+    return $maxStart
+}
+
 function Get-ClipPlan($Videos, [double]$TargetDuration) {
     $remaining = $TargetDuration
     $usedSources = @{}
@@ -1460,22 +1487,19 @@ function Get-ClipPlan($Videos, [double]$TargetDuration) {
                 if ($ClipMode -eq "short" -and $sourceDuration + 0.05 -ge [double]$MinimumShortClipSeconds) {
                     # Short-video mode keeps the source intact instead of discarding it.
                     $takeSeconds = [Math]::Min($remaining, $sourceDuration)
-                    $start = 0
+                    $start = Get-NonOverlappingClipStart $source.FullName $sourceDuration $takeSeconds $clips
                 } else {
                     Write-Host "跳过过短视频：$($source.Name)，需要 $clipSeconds 秒，实际 $sourceDuration 秒"
                     continue
                 }
             } else {
                 $takeSeconds = $clipSeconds
-                $maxStart = [Math]::Max(0, $sourceDuration - $takeSeconds - 0.1)
-                $start = 0
-                if ($maxStart -gt 0) {
-                    $start = $random.NextDouble() * $maxStart
-                }
+                $start = Get-NonOverlappingClipStart $source.FullName $sourceDuration $takeSeconds $clips
             }
             }
         }
 
+        if ($null -eq $start) { continue }
         if (-not (Test-SourceSegmentUnused $source.FullName $start $takeSeconds $clips)) {
             continue
         }
@@ -1679,6 +1703,10 @@ function Invoke-SinglePassRender($Clips, $AudioPath, $OutputPath, $SubtitlePath,
         Pop-Location
         Remove-Item -LiteralPath $filterScriptPath -Force -ErrorAction SilentlyContinue
     }
+}
+
+function Get-RenderJobTimeoutSeconds([double]$AudioDuration) {
+    return [int][Math]::Min(43200, [Math]::Max(1800, [Math]::Ceiling(($AudioDuration * 3) + 600)))
 }
 
 function Start-RenderJob($RenderIndex, $RenderCount, $Clips, $AudioPath, $OutputPath, $SubtitlePath, [bool]$UseSubtitle) {
@@ -2025,6 +2053,8 @@ foreach ($audio in $audios) {
                         } else {
                             $job = Start-RenderJob $renderIndex $renderCount $clipPlan $audio.FullName $output $subtitleSrt $useSubtitle
                             $job | Add-Member -NotePropertyName RenderIndex -NotePropertyValue $renderIndex
+                            $job | Add-Member -NotePropertyName RenderStartedAt -NotePropertyValue (Get-Date)
+                            $job | Add-Member -NotePropertyName RenderTimeoutSeconds -NotePropertyValue (Get-RenderJobTimeoutSeconds $audioDuration)
                             $jobs += $job
                         }
                     } catch {
@@ -2034,6 +2064,11 @@ foreach ($audio in $audios) {
 
                 foreach ($job in @($jobs)) {
                     while ($job.State -eq "Running" -or $job.State -eq "NotStarted") {
+                        if (((Get-Date) - [datetime]$job.RenderStartedAt).TotalSeconds -ge [double]$job.RenderTimeoutSeconds) {
+                            Write-ErrorLog ("第 {0}/{1} 个视频渲染超时（{2} 秒），停止该任务后补剪。" -f $job.RenderIndex, $renderCount, $job.RenderTimeoutSeconds)
+                            Stop-Job -Job $job -ErrorAction SilentlyContinue
+                            break
+                        }
                         $done = Wait-Job -Job $job -Timeout 10
                         if ($done) { break }
                         Write-Heartbeat
@@ -2078,6 +2113,7 @@ foreach ($audio in $audios) {
     $remaining = $audioDuration
     $index = 0
     $segmentPaths = @()
+    $clips = @()
     $usedSources = @{}
     $attempts = 0
     $maxAttempts = [Math]::Max(200, $videos.Count * 30)
@@ -2125,19 +2161,19 @@ foreach ($audio in $audios) {
                 if ($ClipMode -eq "short" -and $sourceDuration + 0.05 -ge [double]$MinimumShortClipSeconds) {
                     # Keep short clips whole in the sequential fallback renderer too.
                     $takeSeconds = [Math]::Min($remaining, $sourceDuration)
-                    $start = 0
+                    $start = Get-NonOverlappingClipStart $source.FullName $sourceDuration $takeSeconds $clips
                 } else {
                     Write-Host "跳过过短视频：$($source.Name)，需要 $clipSeconds 秒，实际 $sourceDuration 秒"
                     continue
                 }
             } else {
                 $takeSeconds = $clipSeconds
-                $maxStart = [Math]::Max(0, $sourceDuration - $takeSeconds - 0.1)
-                $start = 0
-                if ($maxStart -gt 0) {
-                    $start = $random.NextDouble() * $maxStart
-                }
+                $start = Get-NonOverlappingClipStart $source.FullName $sourceDuration $takeSeconds $clips
             }
+        }
+
+        if ($null -eq $start -or -not (Test-SourceSegmentUnused $source.FullName $start $takeSeconds $clips)) {
+            continue
         }
 
         $segment = Join-Path $segmentsDir ("segment_{0:D5}.mp4" -f $index)
@@ -2159,6 +2195,7 @@ foreach ($audio in $audios) {
         Invoke-Checked $Ffmpeg $args "生成片段"
 
         $segmentPaths += $segment
+        $clips += (New-ClipPlanItem $source $start $takeSeconds $false)
         $remaining -= $takeSeconds
         $index += 1
         Write-Host ("  片段 {0} 完成，剩余约 {1} 秒" -f $index, ("{0:N2}" -f [Math]::Max(0, $remaining)))

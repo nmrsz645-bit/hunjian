@@ -280,12 +280,16 @@ function Remove-ProcessedAudio($AudioPath) {
         return
     }
     $textPath = Get-SidecarTextPath $AudioPath
-    if ($textPath) {
-        Remove-Item -LiteralPath $textPath -Force
-        Write-MonitorLog "剪辑完成，已删除同名文本稿：$textPath" Green
-    }
-    Remove-Item -LiteralPath $AudioPath -Force
+    Remove-Item -LiteralPath $AudioPath -Force -ErrorAction Stop
     Write-MonitorLog "剪辑完成，已删除源音频：$AudioPath" Green
+    if ($textPath) {
+        try {
+            Remove-Item -LiteralPath $textPath -Force -ErrorAction Stop
+            Write-MonitorLog "剪辑完成，已删除同名文本稿：$textPath" Green
+        } catch {
+            Write-MonitorLog "源音频已删除，但保留同名文本稿（删除失败）：$textPath；$($_.Exception.Message)" Yellow
+        }
+    }
 }
 
 function Get-SafeName($Name) {

@@ -16,5 +16,7 @@ Assert-True ($desktop -match 'ConcurrentQueue<string>') 'Desktop monitor output 
 Assert-True ($desktop -match 'RuntimeLogLineLimit = 500') 'Desktop runtime log must have a bounded visible history'
 Assert-True ($desktop -match 'Task\.Run\(\(\) => ReadStatusSnapshot') 'Status file scans must run outside the UI thread'
 Assert-True ($desktop -match 'SearchOption\.TopDirectoryOnly') 'Latest log lookup must not recurse through all job logs'
+Assert-True ($desktop -match 'private int _shortTaskRunning') 'Short tasks must have a running-state guard'
+Assert-True ($desktop -match 'Interlocked\.CompareExchange\(ref _shortTaskRunning, 1, 0\)') 'Repeated short-test clicks must not launch concurrent tasks'
 
 Write-Output 'PASS Test-DesktopConfig'

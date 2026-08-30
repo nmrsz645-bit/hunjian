@@ -1,0 +1,33 @@
+name: Source check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Verify handover files
+        shell: powershell
+        run: ./tests/Test-Handover.ps1
+      - name: Parse PowerShell entry points
+        shell: powershell
+        run: |
+          $errors = @()
+          'AutoCut.ps1','Auto-Monitor.ps1','AutoStart.ps1','Start-AutoCut.ps1' | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [void][Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD $_), [ref]$tokens, [ref]$parseErrors)
+            $errors += @($parseErrors)
+          }
+          if ($errors.Count -gt 0) { throw ($errors | ForEach-Object Message | Out-String) }
+      - name: Build desktop app
+        run: dotnet build ./desktop-src/AutoCutDesktop.csproj -c Release --nologo

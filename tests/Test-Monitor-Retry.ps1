@@ -19,4 +19,12 @@ foreach ($case in @(
 )) {
     if ((Test-RetryableFailure $case.Message) -ne $case.Expected) { throw "Unexpected retry classification: $($case.Message)" }
 }
+
+$removeFunctionAst = $ast.FindAll({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Remove-ProcessedAudio' }, $true) | Select-Object -First 1
+if (-not $removeFunctionAst) { throw 'Missing Remove-ProcessedAudio.' }
+$removeFunctionText = $removeFunctionAst.Extent.Text
+$audioDelete = $removeFunctionText.IndexOf('Remove-Item -LiteralPath $AudioPath')
+$textDelete = $removeFunctionText.IndexOf('Remove-Item -LiteralPath $textPath')
+if ($audioDelete -lt 0 -or $textDelete -lt 0 -or $audioDelete -ge $textDelete) { throw 'Source audio must be deleted before its sidecar TXT.' }
+if ($removeFunctionText -notmatch 'try\s*\{[\s\S]*Remove-Item -LiteralPath \$textPath' -or $removeFunctionText -notmatch '保留同名文本稿') { throw 'A failed sidecar deletion must preserve the TXT and only log a warning.' }
 Write-Output 'PASS Test-Monitor-Retry'

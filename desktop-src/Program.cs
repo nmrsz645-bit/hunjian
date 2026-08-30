@@ -68,6 +68,7 @@ internal sealed class MainForm : Form
     private int _pendingRuntimeLineCount;
     private int _droppedRuntimeLineCount;
     private int _statusRefreshRunning;
+    private int _shortTaskRunning;
     private int _completedCount;
     private int _todayCompletedCount;
     private int _failedCount;
@@ -289,6 +290,11 @@ internal sealed class MainForm : Form
     private void RunShortTask(string script, string args, string name)
     {
         if (!File.Exists(script)) { ShowError("找不到脚本：" + script); return; }
+        if (Interlocked.CompareExchange(ref _shortTaskRunning, 1, 0) != 0)
+        {
+            AppendRuntime("已有环境自检或 10 秒测试正在运行，请等待完成。");
+            return;
+        }
         var worker = new Thread(() =>
         {
             try
@@ -301,6 +307,7 @@ internal sealed class MainForm : Form
                 BeginInvoke(RefreshFileLog);
             }
             catch (Exception ex) { AppendRuntime(name + "失败：" + ex.Message); }
+            finally { Interlocked.Exchange(ref _shortTaskRunning, 0); }
         }) { IsBackground = true };
         worker.Start();
     }

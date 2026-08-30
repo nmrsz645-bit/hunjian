@@ -14,9 +14,29 @@ function Get-FunctionText([string]$Name) {
 }
 
 Import-Module (Join-Path $root 'Subtitle-Core.psm1') -Force -DisableNameChecking
+Import-Module (Join-Path $root 'Segment-Usage.psm1') -Force -DisableNameChecking
+Invoke-Expression (Get-FunctionText 'Get-NonOverlappingClipStart')
+Invoke-Expression (Get-FunctionText 'Get-RenderJobTimeoutSeconds')
 Invoke-Expression (Get-FunctionText 'Get-RenderChunks')
 Invoke-Expression (Get-FunctionText 'Write-RenderChunkSubtitle')
 Invoke-Expression (Get-FunctionText 'Merge-ParaformerChunkSrt')
+
+$random = New-Object Random 20260831
+$longSource = [pscustomobject]@{ FullName = 'C:\素材\long.mp4'; Name = 'long.mp4' }
+$longPlan = @()
+$longRemaining = 905.0
+while ($longRemaining -gt 0.05) {
+    $takeSeconds = [Math]::Min(30.0, $longRemaining)
+    $start = Get-NonOverlappingClipStart $longSource.FullName 905.0 $takeSeconds $longPlan
+    if ($null -eq $start) { throw 'A single long source must retain enough contiguous capacity for the final clip.' }
+    if (-not (Test-SourceSegmentUnused $longSource.FullName $start $takeSeconds $longPlan)) { throw 'Long-source clip plan must not reuse source seconds.' }
+    $longPlan += [pscustomobject]@{ Source = $longSource; Start = $start; Duration = $takeSeconds }
+    $longRemaining -= $takeSeconds
+}
+if ($longPlan.Count -ne 31 -or [Math]::Abs((($longPlan | Measure-Object Duration -Sum).Sum) - 905.0) -gt 0.001) { throw 'Long-source clip plan must cover the full audio duration without random-fragmentation failure.' }
+if ((Get-RenderJobTimeoutSeconds 60) -ne 1800) { throw 'Short render jobs must have a 30-minute total timeout floor.' }
+if ((Get-RenderJobTimeoutSeconds 3600) -ne 11400) { throw 'One-hour render jobs must have a duration-aware total timeout.' }
+if ((Get-RenderJobTimeoutSeconds 999999) -ne 43200) { throw 'Render job timeout must have a 12-hour ceiling.' }
 
 $clips = 1..50 | ForEach-Object { [pscustomobject]@{ Duration = 10; Source = "clip$_" } }
 $chunks = @(Get-RenderChunks $clips 24)
@@ -51,7 +71,7 @@ try {
     Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-foreach ($expected in @('if ($Clips.Count -gt 24)', 'Invoke-ChunkedSinglePassRender', '长音频分段渲染', '每块最多 24 个素材')) {
+foreach ($expected in @('if ($Clips.Count -gt 24)', 'Invoke-ChunkedSinglePassRender', '长音频分段渲染', '每块最多 24 个素材', 'Get-NonOverlappingClipStart', 'Get-RenderJobTimeoutSeconds', 'Stop-Job -Job $job')) {
     if (-not $source.Contains($expected)) { throw "Missing long-audio rendering protection: $expected" }
 }
 $config = [IO.File]::ReadAllText((Join-Path $root 'config.ps1'), [Text.Encoding]::UTF8)
