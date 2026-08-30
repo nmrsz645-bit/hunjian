@@ -26,7 +26,7 @@ Get-Content .\HANDOFF.md -Encoding UTF8
 - Git 远端 `main` 与本地已完成同步验证；接手时必须执行 `git status --short`、`git pull --ff-only` 和 `git rev-parse HEAD` 获取当前提交，不能依赖本文件的固定历史提交号。
 - `tests\Test-All.ps1`：20 项通过；`dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release`：0 警告、0 错误。
 - 新电脑交接：远端全新克隆通过 `tests\Test-Handover.ps1` 与桌面构建；`config.example.ps1` 为 UTF-8 BOM，且 `WhisperModel` 指向 `tools\models\ggml-tiny.bin`。
-- 空白新电脑引导：`Initialize-NewComputer.ps1` 会从固定上游版本下载并 SHA-256 校验 FFmpeg、Whisper、OpenCC、Whisper tiny 模型，再调用现有 Paraformer 安装器下载运行时和三套模型；已存在或不完整的用户依赖绝不覆盖。
+- 空白新电脑引导：`Initialize-NewComputer.ps1` 会从固定上游版本下载并 SHA-256 校验 FFmpeg、Whisper、OpenCC、Whisper tiny 模型，再调用现有 Paraformer 安装器下载运行时和三套模型；已存在或未知不完整的用户依赖绝不覆盖。只有本引导写入的续传标记允许重跑并继续临时中断的 Paraformer 下载。
 - 真实隔离运行：15 分 05 秒 MP3 + 唯一 15 分 10 秒 MP4，Paraformer-large、NVENC、随机不重叠取材，成功输出 905 秒 H.264/AAC 成片；模型缓存 31 个文件 SHA-256 前后无差异。证据目录：`D:\ui\temp\hun_jian_long_source_stability_20260831`。
 - 已修复：TXT 删除顺序、渲染任务总超时、重复短任务、长素材随机碎片化；新增 GitHub 源码检查工作流。
 

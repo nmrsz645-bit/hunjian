@@ -14,6 +14,7 @@ banbenbeifen/
 tools/paraformer/runtime/
 tools/paraformer/model_cache/
 tools/paraformer/downloads/
+tools/paraformer/.new-computer-bootstrap.pending
 tools/paraformer/__pycache__/
 tools/ffmpeg/
 tools/whisper/

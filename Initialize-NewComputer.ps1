@@ -74,6 +74,7 @@ function Initialize-Paraformer {
     $paraformerRoot = Join-Path $Root 'tools\paraformer'
     $runtimeDir = Join-Path $paraformerRoot 'runtime'
     $modelCacheDir = Join-Path $paraformerRoot 'model_cache'
+    $resumeMarker = Join-Path $paraformerRoot '.new-computer-bootstrap.pending'
     $readyFiles = @(
         (Join-Path $runtimeDir 'python.exe'),
         (Join-Path $modelCacheDir 'models\iic--speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch\snapshots\master\model.pt'),
@@ -81,11 +82,12 @@ function Initialize-Paraformer {
         (Join-Path $modelCacheDir 'models\iic--punc_ct-transformer_cn-en-common-vocab471067-large\snapshots\master\model.pt')
     )
     if (@($readyFiles | Where-Object { -not (Test-ExpectedFile $_) }).Count -eq 0) {
+        if (Test-Path -LiteralPath $resumeMarker) { Remove-Item -LiteralPath $resumeMarker -Force }
         Write-Step 'Paraformer 运行环境和模型已存在，保持不覆盖。'
         return
     }
     foreach ($path in @($runtimeDir, $modelCacheDir)) {
-        if ((Test-Path -LiteralPath $path) -and @(Get-ChildItem -LiteralPath $path -Force -ErrorAction SilentlyContinue).Count -gt 0) {
+        if ((Test-Path -LiteralPath $path) -and @(Get-ChildItem -LiteralPath $path -Force -ErrorAction SilentlyContinue).Count -gt 0 -and -not (Test-Path -LiteralPath $resumeMarker)) {
             throw "Paraformer 目录不完整，为保护已有下载内容，不自动覆盖：$path"
         }
     }
@@ -95,10 +97,12 @@ function Initialize-Paraformer {
     if (-not ((Test-ExpectedFile $worker) -and (Test-ExpectedFile $setup))) { throw 'Paraformer 安装脚本或识别器缺失，源码不完整。' }
     $logPath = Join-Path $Root 'logs\paraformer_setup.log'
     Ensure-Directory (Split-Path -Parent $logPath)
+    [IO.File]::WriteAllText($resumeMarker, 'This incomplete Paraformer setup was created by Initialize-NewComputer.ps1. Re-running this script may resume it.', [Text.Encoding]::ASCII)
     Write-Step '下载并配置 Paraformer 运行环境和三套模型（首次耗时较长）。'
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $setup -RuntimeDir $runtimeDir -ModelCacheDir $modelCacheDir -WorkerPath $worker -LogPath $logPath
     if ($LASTEXITCODE -ne 0) { throw "Paraformer 配置失败，详见：$logPath" }
     if (@($readyFiles | Where-Object { -not (Test-ExpectedFile $_) }).Count -gt 0) { throw "Paraformer 配置后仍不完整，详见：$logPath" }
+    Remove-Item -LiteralPath $resumeMarker -Force
 }
 
 try {

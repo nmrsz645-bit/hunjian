@@ -25,7 +25,7 @@ Windows 本地自动混剪程序：监控音频目录，使用本地 Paraformer 
 
     `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Initialize-NewComputer.ps1`
 
-   该脚本创建本机 `config.ps1`、素材/输出目录，下载 FFmpeg、Whisper、OpenCC、Whisper tiny 模型，并下载 Paraformer 运行环境和三套模型；首次下载需要联网、耗时较长、建议预留 10GB 空间。所有下载都在解压前做 SHA-256 校验，已有目录不会覆盖。
+   该脚本创建本机 `config.ps1`、素材/输出目录，下载 FFmpeg、Whisper、OpenCC、Whisper tiny 模型，并下载 Paraformer 运行环境和三套模型；首次下载需要联网、耗时较长、建议预留 10GB 空间。所有下载都在解压前做 SHA-256 校验，已有目录不会覆盖。若脚本自身的 Paraformer 下载被临时网络中断，直接重跑同一命令可继续；未知的已有不完整模型目录仍会停止保护。
 2. 断网环境可跳过脚本，按上节从受控备份恢复运行依赖；不需要恢复 `chajia` 中的旧离线 ZIP。
 3. 放入视频和音频后运行环境检查或 10 秒测试，再开始监控。`-CheckOnly` 会创建首次运行目录和本地版本备份，不是纯只读操作。
 
