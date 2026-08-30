@@ -1,21 +1,22 @@
 # 自动剪辑桌面版完整交接
 
-本文件是新会话和新电脑的单一接手入口；历史细节见 `TIMEOFF.md`。项目当前根目录为 `E:\自动化\混剪\自动剪辑桌面版_V16`，Git 远端为 `https://github.com/nmrsz645-bit/hunjian.git`。
+本文件是新会话和新电脑的单一接手入口；历史细节见 `TIMEOFF.md`。原开发电脑的规范源目录为 `E:\自动化\混剪\自动剪辑桌面版_V16`；新电脑以自己的克隆目录为项目根目录。Git 远端为 `https://github.com/nmrsz645-bit/hunjian.git`。
 
 ## 当前状态与目标
 
-- Git `main` 当前提交：`d36da04a98d385172edfda74411aa013d11d7c44`；已推送，工作区干净。
+- Git `main` 是唯一源码版本依据；接手时执行 `git status --short`、`git pull --ff-only` 和 `git rev-parse HEAD` 获取当前提交。不要依赖文档中会过期的固定提交号。
 - 当前目标是维持已验证的源码与交接能力。**没有待发布版本**；除非用户明确授权，不创建更新包、不上传 OSS、不改 `latest.json`/catalog，也不通知更新程序。
 - 已完成最后一轮稳定性修复：监控 TXT 安全删除、渲染总超时、短任务防重入、单长素材不重叠取材、示例配置模型路径和源码 CI。
 
 ## 第一条操作
 
-在已有工作副本运行：
+在项目根目录运行（新电脑将 `<你的克隆目录>` 改为实际 `git clone` 后的目录）：
 
 ```powershell
-Set-Location 'E:\自动化\混剪\自动剪辑桌面版_V16'
+Set-Location '<你的克隆目录>'
 git status --short
 git pull --ff-only
+git rev-parse HEAD
 ```
 
 然后阅读 `AGENTS.md`、`README.md`、本文件和 `TIMEOFF.md` 顶部的“当前交接快照”。若 Git 状态非空，先保留并确认这些改动来源，不要重置或覆盖。

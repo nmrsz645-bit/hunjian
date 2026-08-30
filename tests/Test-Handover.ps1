@@ -27,6 +27,9 @@ $handoffText = [IO.File]::ReadAllText($handoff, [Text.Encoding]::UTF8)
 foreach ($expected in @('## 第一条操作', '## 新电脑接手与运行', '## 已完成验证', '## 已知边界', '## 严禁误动的数据')) {
     Assert-True ($handoffText.Contains($expected)) "总交接文档必须包含：$expected"
 }
+Assert-True ($handoffText.Contains("Set-Location '<你的克隆目录>'")) '第一条操作必须可在新电脑的克隆目录执行'
+Assert-True (-not $handoffText.Contains("Set-Location 'E:\自动化\混剪\自动剪辑桌面版_V16'")) '第一条操作不能写死原开发电脑路径'
+Assert-True (-not $handoffText.Contains('d36da04a98d385172edfda74411aa013d11d7c44')) '总交接文档不能依赖已过期的固定提交号'
 
 $ignoreText = [IO.File]::ReadAllText($ignore, [Text.Encoding]::UTF8)
 foreach ($path in @('config.ps1', 'logs/', 'work/', 'tools/paraformer/runtime/', 'tools/paraformer/model_cache/', 'fonts/UserAdded/')) {

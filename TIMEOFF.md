@@ -12,9 +12,10 @@
 ### 下一步（第一条可直接操作）
 
 ```powershell
-Set-Location 'E:\自动化\混剪\自动剪辑桌面版_V16'
+Set-Location '<你的克隆目录>'
 git status --short
 git pull --ff-only
+git rev-parse HEAD
 Get-Content .\HANDOFF.md -Encoding UTF8
 ```
 
@@ -22,7 +23,7 @@ Get-Content .\HANDOFF.md -Encoding UTF8
 
 ### 已完成并验证
 
-- Git 远端 `main` 与本地一致，提交：`d36da04a98d385172edfda74411aa013d11d7c44`；工作区干净。
+- Git 远端 `main` 与本地已完成同步验证；接手时必须执行 `git status --short`、`git pull --ff-only` 和 `git rev-parse HEAD` 获取当前提交，不能依赖本文件的固定历史提交号。
 - `tests\Test-All.ps1`：20 项通过；`dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release`：0 警告、0 错误。
 - 新电脑交接：远端全新克隆通过 `tests\Test-Handover.ps1` 与桌面构建；`config.example.ps1` 为 UTF-8 BOM，且 `WhisperModel` 指向 `tools\models\ggml-tiny.bin`。
 - 真实隔离运行：15 分 05 秒 MP3 + 唯一 15 分 10 秒 MP4，Paraformer-large、NVENC、随机不重叠取材，成功输出 905 秒 H.264/AAC 成片；模型缓存 31 个文件 SHA-256 前后无差异。证据目录：`D:\ui\temp\hun_jian_long_source_stability_20260831`。
