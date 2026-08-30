@@ -24,13 +24,13 @@ git rev-parse HEAD
 ## 新电脑接手与运行
 
 1. 克隆仓库：`git clone https://github.com/nmrsz645-bit/hunjian.git`。
-2. 有网络时，直接运行以下命令。它会创建本机 `config.ps1` 并下载、校验缺失运行依赖，且不会覆盖已有配置、模型或运行时：
+2. 优先向维护者取得 Paraformer 离线包，校验 SHA-256 后解压到 `tools\paraformer`，使该目录直接含有 `runtime`、`model_cache`、`downloads`。然后运行以下命令；它会创建本机 `config.ps1` 并下载、校验其余运行依赖，且不会覆盖已有配置、模型或运行时：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Initialize-NewComputer.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Initialize-NewComputer.ps1 -SkipParaformer
 ```
 
-3. 无网络时，**直接复制** `config.example.ps1` 为 `config.ps1`，保留 UTF-8 BOM；不要用会转换编码的编辑器另存，并从受控备份恢复这些目录到项目同名位置：
+3. 没有离线包时，才删除 `-SkipParaformer` 让引导脚本在线下载 Paraformer；中断后保留日志和已有目录，不能手工删除或覆盖。无网络时，**直接复制** `config.example.ps1` 为 `config.ps1`，保留 UTF-8 BOM；不要用会转换编码的编辑器另存，并从受控备份恢复这些目录到项目同名位置：
 
    - `tools\ffmpeg`
    - `tools\whisper`

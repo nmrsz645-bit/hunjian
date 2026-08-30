@@ -27,6 +27,7 @@ Get-Content .\HANDOFF.md -Encoding UTF8
 - `tests\Test-All.ps1`：20 项通过；`dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release`：0 警告、0 错误。
 - 新电脑交接：远端全新克隆通过 `tests\Test-Handover.ps1` 与桌面构建；`config.example.ps1` 为 UTF-8 BOM，且 `WhisperModel` 指向 `tools\models\ggml-tiny.bin`。
 - 空白新电脑引导：`Initialize-NewComputer.ps1` 会从固定上游版本下载并 SHA-256 校验 FFmpeg、Whisper、OpenCC、Whisper tiny 模型，再调用现有 Paraformer 安装器下载运行时和三套模型；已存在或未知不完整的用户依赖绝不覆盖。只有本引导写入的续传标记允许重跑并继续临时中断的 Paraformer 下载。
+- 新电脑离线 Paraformer 包：已在原开发电脑生成并核验 `Paraformer_离线运行组件_20260831.tar`（7,683,095,552 字节，SHA-256 `9568A560A361077816123856D15289B817F7C5A40CD833F24F9F77601CA699B3`），内含 49,321 个 `runtime`、`model_cache`、`downloads` 条目。优先将其解压到新项目 `tools\paraformer`，再运行 `Initialize-NewComputer.ps1 -SkipParaformer`。在线 Paraformer 引导仍应视为备用路径：已发现首次下载中断后的 pip 初始化兼容性问题，不能在未做真实空白机成功验收前作为唯一交接方式。
 - 真实隔离运行：15 分 05 秒 MP3 + 唯一 15 分 10 秒 MP4，Paraformer-large、NVENC、随机不重叠取材，成功输出 905 秒 H.264/AAC 成片；模型缓存 31 个文件 SHA-256 前后无差异。证据目录：`D:\ui\temp\hun_jian_long_source_stability_20260831`。
 - 已修复：TXT 删除顺序、渲染任务总超时、重复短任务、长素材随机碎片化；新增 GitHub 源码检查工作流。
 
