@@ -2,7 +2,7 @@
 
 ## 先读
 
-开始工作前阅读 `README.md`、`TIMEOFF.md`、`config.example.ps1` 和 Git 状态。`TIMEOFF.md` 是当前进度、发布状态与已知问题的交接依据。
+开始工作前阅读 `HANDOFF.md`、`README.md`、`TIMEOFF.md` 顶部快照、`config.example.ps1` 和 Git 状态。`HANDOFF.md` 是当前总交接依据；`TIMEOFF.md` 保存当前快照和历史进度、发布状态与已知问题。
 
 ## 不可触碰的用户数据
 

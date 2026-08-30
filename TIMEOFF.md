@@ -1,4 +1,54 @@
-# 自动剪辑桌面版交接（2026-08-21，1.0.64 已发布）
+# 自动剪辑桌面版交接（历史记录保留）
+
+> **新会话先读：**以本节和根目录 [HANDOFF.md](HANDOFF.md) 为当前交接依据；下方内容是按日期保留的历史发布、故障和验证记录。不得把较早的“当前结论”或“下一步”当作当前任务。
+
+## 当前交接快照（2026-08-31）
+
+### 当前目标
+
+- 当前代码已完成稳定性和新电脑交接验证；**不要继续修改程序、不要创建发布包、不要上传线上清单或通知更新程序**，除非用户另行明确授权。
+- 下一个会话的工作应从用户的新请求开始；若用户要求发布，先重新核对线上版本、发布源、完整包、保护目录、隔离升级和回滚，不能依据本文历史版本号直接发布。
+
+### 下一步（第一条可直接操作）
+
+```powershell
+Set-Location 'E:\自动化\混剪\自动剪辑桌面版_V16'
+git status --short
+git pull --ff-only
+Get-Content .\HANDOFF.md -Encoding UTF8
+```
+
+若是另一台电脑，先克隆 `https://github.com/nmrsz645-bit/hunjian.git`，再按 `HANDOFF.md` 恢复运行依赖；源码仓库不是完整安装包。
+
+### 已完成并验证
+
+- Git 远端 `main` 与本地一致，提交：`d36da04a98d385172edfda74411aa013d11d7c44`；工作区干净。
+- `tests\Test-All.ps1`：20 项通过；`dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release`：0 警告、0 错误。
+- 新电脑交接：远端全新克隆通过 `tests\Test-Handover.ps1` 与桌面构建；`config.example.ps1` 为 UTF-8 BOM，且 `WhisperModel` 指向 `tools\models\ggml-tiny.bin`。
+- 真实隔离运行：15 分 05 秒 MP3 + 唯一 15 分 10 秒 MP4，Paraformer-large、NVENC、随机不重叠取材，成功输出 905 秒 H.264/AAC 成片；模型缓存 31 个文件 SHA-256 前后无差异。证据目录：`D:\ui\temp\hun_jian_long_source_stability_20260831`。
+- 已修复：TXT 删除顺序、渲染任务总超时、重复短任务、长素材随机碎片化；新增 GitHub 源码检查工作流。
+
+### 未完成事项与已知问题
+
+- **无待处理代码缺陷。**新电脑必须从受控备份恢复 FFmpeg、Whisper、OpenCC、Paraformer runtime/模型；这些目录按设计不进 Git。
+- `Start-AutoCut.ps1 -CheckOnly` 会创建首次运行目录和本地备份，不是纯只读检查。
+- GitHub Actions 已写入源码；当前会话只做本地和远端克隆验证，若后续需要把 Actions 结果作为发布证据，应在 GitHub Actions 页面确认对应提交通过。
+- 线上发布版本的旧历史记录存在 1.0.63/1.0.64/1.0.67 等日期条目；任何发布前必须公网回读，不能直接采信历史章节。
+
+### 关键文件、命令与保护边界
+
+- 总交接：`HANDOFF.md`；开发约定：`AGENTS.md`；源码接手：`README.md`；发布/更新器：`UPDATER_HANDOFF.md`。
+- 核心：`AutoCut.ps1`、`Auto-Monitor.ps1`、`desktop-src\Program.cs`；测试：`tests\Test-All.ps1`、`tests\Test-Handover.ps1`。
+- 验证命令：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-All.ps1
+dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-AutoCut.ps1 -CheckOnly
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-AutoCut.ps1 -Test
+```
+
+- 未经明确授权，绝不能删除、覆盖、移动或提交：`config.ps1`、`config\`、`视频位置\`、`音频位置\`、`完成\`、`失败音频\`、`work\`、`logs\`、`backups\`、`banbenbeifen\`、`fonts\UserAdded\`、`tools\paraformer\runtime`、`model_cache`、`downloads`，以及线上包、清单、`app.previous`。
 
 ## 2026-08-23：已验证、待发布的长音频字幕时间轴修复
 

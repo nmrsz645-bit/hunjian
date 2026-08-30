@@ -4,9 +4,11 @@
 $root = Split-Path -Parent $PSScriptRoot
 $exampleConfig = Join-Path $root 'config.example.ps1'
 $readme = Join-Path $root 'README.md'
+$handoff = Join-Path $root 'HANDOFF.md'
 $ignore = Join-Path $root '.gitignore'
 
 Assert-True (Test-Path -LiteralPath $exampleConfig -PathType Leaf) '交接必须包含示例配置'
+Assert-True (Test-Path -LiteralPath $handoff -PathType Leaf) '交接必须包含总交接文档'
 $bytes = [IO.File]::ReadAllBytes($exampleConfig)
 Assert-True ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) '示例配置必须为Windows PowerShell 5.1可读的UTF-8 BOM'
 . $exampleConfig
@@ -19,6 +21,11 @@ Assert-True ($integrationText -match "config\.example\.ps1") '集成测试在没
 $readmeText = [IO.File]::ReadAllText($readme, [Text.Encoding]::UTF8)
 foreach ($path in @('tools\paraformer\runtime', 'tools\paraformer\model_cache', 'tools\ffmpeg', 'tools\opencc')) {
     Assert-True ($readmeText.Contains($path)) "README必须说明恢复运行依赖：$path"
+}
+
+$handoffText = [IO.File]::ReadAllText($handoff, [Text.Encoding]::UTF8)
+foreach ($expected in @('## 第一条操作', '## 新电脑接手与运行', '## 已完成验证', '## 已知边界', '## 严禁误动的数据')) {
+    Assert-True ($handoffText.Contains($expected)) "总交接文档必须包含：$expected"
 }
 
 $ignoreText = [IO.File]::ReadAllText($ignore, [Text.Encoding]::UTF8)

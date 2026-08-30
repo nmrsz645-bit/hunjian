@@ -39,7 +39,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-All.ps1
 dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release
 ```
 
-完整交接状态、已发布版本、发布验证和已知限制以 [TIMEOFF.md](TIMEOFF.md) 为准；发布更新的专门交接信息见 [UPDATER_HANDOFF.md](UPDATER_HANDOFF.md)。
+完整接手入口见 [HANDOFF.md](HANDOFF.md)；按日期保留的进度、发布验证和已知限制见 [TIMEOFF.md](TIMEOFF.md) 顶部快照；发布更新的专门交接信息见 [UPDATER_HANDOFF.md](UPDATER_HANDOFF.md)。
 
 ## 当前重要决定
 
