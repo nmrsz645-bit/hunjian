@@ -25,6 +25,7 @@ Assert-True ($bootstrap.Contains('.new-computer-bootstrap.pending')) 'Paraformer
 Assert-True ($bootstrap.Contains('not (Test-Path -LiteralPath $resumeMarker)')) '未知Paraformer不完整目录必须继续受保护'
 Assert-True ($bootstrap.Contains('[switch]$SkipParaformer')) '新电脑配置脚本必须允许独立验证非模型依赖'
 Assert-True (-not $bootstrap.Contains('chajia\ffmpeg.zip')) '新电脑配置不能依赖旧电脑的 chajia 本地安装包'
-Assert-True ($paraformerSetup.Contains('$process.WaitForExit()')) 'Paraformer安装器必须等待下载进程结束再读取退出码'
+Assert-True ($paraformerSetup.Contains('& $FilePath @Arguments 1> $stdout 2> $stderr')) 'Paraformer安装器必须直接执行下载命令，避免Start-Process丢失退出码'
+Assert-True ($paraformerSetup.Contains('$exitCode = $LASTEXITCODE')) 'Paraformer安装器必须读取实际命令退出码'
 
 Write-Host 'PASS Test-NewComputerBootstrap' -ForegroundColor Green

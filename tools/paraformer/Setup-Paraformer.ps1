@@ -31,41 +31,14 @@ function ConvertTo-DownloadBytes([double]$Value, [string]$Unit) {
     switch ($Unit.ToUpperInvariant()) { 'KB' { return [Int64]($Value * 1KB) } 'MB' { return [Int64]($Value * 1MB) } 'GB' { return [Int64]($Value * 1GB) } default { return [Int64]$Value } }
 }
 
-function Update-SetupProgressFromText([string]$Text, [string]$Stage) {
-    $matches = [regex]::Matches($Text, '(?<done>\d+(?:\.\d+)?)\s*(?<doneUnit>KB|MB|GB)\s*(?:/|of)\s*(?<total>\d+(?:\.\d+)?)\s*(?<totalUnit>KB|MB|GB)', 'IgnoreCase')
-    if ($matches.Count -eq 0) { return }
-    $match = $matches[$matches.Count - 1]
-    $speedMatch = [regex]::Matches($Text, '(?<speed>\d+(?:\.\d+)?\s*(?:KB|MB|GB)/s)', 'IgnoreCase')
-    $speed = if ($speedMatch.Count -gt 0) { $speedMatch[$speedMatch.Count - 1].Groups['speed'].Value } else { '' }
-    Write-SetupProgress $Stage '' (ConvertTo-DownloadBytes ([double]$match.Groups['done'].Value) $match.Groups['doneUnit'].Value) (ConvertTo-DownloadBytes ([double]$match.Groups['total'].Value) $match.Groups['totalUnit'].Value) $speed
-}
-
-function Read-SharedText([string]$Path) {
-    try {
-        $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
-        try {
-            $reader = New-Object IO.StreamReader($stream, [Text.UTF8Encoding]::new($false), $true)
-            try { return $reader.ReadToEnd() } finally { $reader.Dispose() }
-        } finally { $stream.Dispose() }
-    } catch [IO.IOException] {
-        return ''
-    }
-}
-
 function Invoke-LoggedProcess([string]$FilePath, [string[]]$Arguments, [string]$Name) {
     $token = [guid]::NewGuid().ToString('N')
     $stdout = Join-Path ([IO.Path]::GetTempPath()) "paraformer_$token.out.log"
     $stderr = Join-Path ([IO.Path]::GetTempPath()) "paraformer_$token.err.log"
     try {
         Write-SetupProgress $Name
-        $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-        while (-not $process.HasExited) {
-            $liveText = @($(foreach ($path in @($stdout, $stderr)) { if (Test-Path -LiteralPath $path) { Read-SharedText $path } })) -join "`n"
-            Update-SetupProgressFromText $liveText $Name
-            Start-Sleep -Milliseconds 500
-        }
-        $process.WaitForExit()
-        $exitCode = $process.ExitCode
+        & $FilePath @Arguments 1> $stdout 2> $stderr
+        $exitCode = $LASTEXITCODE
         foreach ($path in @($stdout, $stderr)) {
             if (Test-Path -LiteralPath $path) {
                 $content = Read-SharedText $path
