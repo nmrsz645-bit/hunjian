@@ -24,8 +24,13 @@ git rev-parse HEAD
 ## 新电脑接手与运行
 
 1. 克隆仓库：`git clone https://github.com/nmrsz645-bit/hunjian.git`。
-2. **直接复制** `config.example.ps1` 为 `config.ps1`，保留 UTF-8 BOM；不要用会转换编码的编辑器另存。
-3. 从受控备份恢复这些目录到项目同名位置：
+2. 有网络时，直接运行以下命令。它会创建本机 `config.ps1` 并下载、校验缺失运行依赖，且不会覆盖已有配置、模型或运行时：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Initialize-NewComputer.ps1
+```
+
+3. 无网络时，**直接复制** `config.example.ps1` 为 `config.ps1`，保留 UTF-8 BOM；不要用会转换编码的编辑器另存，并从受控备份恢复这些目录到项目同名位置：
 
    - `tools\ffmpeg`
    - `tools\whisper`
@@ -36,7 +41,7 @@ git rev-parse HEAD
    - `tools\paraformer\downloads`
    - 可选用户字幕字体：`fonts\UserAdded`
 
-4. 只在上述依赖恢复完成后运行：
+4. 只在上述依赖下载或恢复完成后运行：
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-AutoCut.ps1 -CheckOnly

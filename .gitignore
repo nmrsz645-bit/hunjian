@@ -19,6 +19,7 @@ tools/ffmpeg/
 tools/whisper/
 tools/opencc/
 tools/models/
+tools/bootstrap-downloads/
 
 # Build, release, and binary artifacts
 desktop-src/bin/

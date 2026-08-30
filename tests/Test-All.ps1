@@ -12,6 +12,7 @@
 & "$PSScriptRoot\Test-Monitor-Retry.ps1"
 & "$PSScriptRoot\Test-DesktopConfig.ps1"
 & "$PSScriptRoot\Test-Handover.ps1"
+& "$PSScriptRoot\Test-NewComputerBootstrap.ps1"
 & "$PSScriptRoot\Test-Log-Retention.ps1"
 & "$PSScriptRoot\Test-MediaInfoUnicode.ps1"
 & "$PSScriptRoot\Test-Maintenance.ps1"

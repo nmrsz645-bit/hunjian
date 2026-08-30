@@ -6,7 +6,7 @@ Windows 本地自动混剪程序：监控音频目录，使用本地 Paraformer 
 
 本 Git 仓库只保存源码、测试、文档和示例配置。它**不是完整安装包**：不包含用户配置、音视频素材、成品、日志、工作区、发布包或 Paraformer/FFmpeg 二进制依赖。
 
-新电脑需要从受控备份单独复制以下目录到项目同名位置，或按部署流程重新安装：
+新电脑可直接执行 `Initialize-NewComputer.ps1` 下载和校验运行依赖；它不会覆盖已有配置、模型或运行时。无法联网时，才从受控备份恢复以下目录到项目同名位置：
 
 - `tools\paraformer\runtime`
 - `tools\paraformer\model_cache`
@@ -21,10 +21,13 @@ Windows 本地自动混剪程序：监控音频目录，使用本地 Paraformer 
 
 ## 首次接手
 
-1. 克隆仓库并**直接复制文件** `config.example.ps1` 为 `config.ps1`；不要用会改变编码的编辑器另存。示例配置为 Windows PowerShell 5.1 所需的 UTF-8 BOM。
-2. 从原电脑备份恢复上列运行依赖；只要这些目标目录完整，不需要恢复 `chajia` 中的离线安装 ZIP。
-3. 按需建立 `视频位置`、`音频位置`、`完成`、`work` 目录。
-4. 在已恢复依赖后运行环境检查或 10 秒测试，再开始监控。`-CheckOnly` 会创建首次运行目录和本地版本备份，不是纯只读操作。
+1. 克隆仓库后，在项目根目录执行：
+
+    `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Initialize-NewComputer.ps1`
+
+   该脚本创建本机 `config.ps1`、素材/输出目录，下载 FFmpeg、Whisper、OpenCC、Whisper tiny 模型，并下载 Paraformer 运行环境和三套模型；首次下载需要联网、耗时较长、建议预留 10GB 空间。所有下载都在解压前做 SHA-256 校验，已有目录不会覆盖。
+2. 断网环境可跳过脚本，按上节从受控备份恢复运行依赖；不需要恢复 `chajia` 中的旧离线 ZIP。
+3. 放入视频和音频后运行环境检查或 10 秒测试，再开始监控。`-CheckOnly` 会创建首次运行目录和本地版本备份，不是纯只读操作。
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-AutoCut.ps1 -CheckOnly
