@@ -1,3 +1,4 @@
+﻿# Keep this file as UTF-8 with BOM for Windows PowerShell 5.1.
 # Copy this file to config.ps1 on a new machine, then adjust paths and options.
 # Do not commit config.ps1: it is the local user's runtime configuration.
 

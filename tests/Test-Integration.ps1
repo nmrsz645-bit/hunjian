@@ -2,7 +2,11 @@
 . "$PSScriptRoot\Test-Helpers.ps1"
 
 $root = Split-Path -Parent $PSScriptRoot
-$configText = [IO.File]::ReadAllText((Join-Path $root 'config.ps1'), [Text.Encoding]::UTF8)
+$configPath = Join-Path $root 'config.ps1'
+if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
+    $configPath = Join-Path $root 'config.example.ps1'
+}
+$configText = [IO.File]::ReadAllText($configPath, [Text.Encoding]::UTF8)
 $autoCutText = [IO.File]::ReadAllText((Join-Path $root 'AutoCut.ps1'), [Text.Encoding]::UTF8)
 
 foreach ($name in @(
@@ -24,7 +28,7 @@ foreach ($name in @(
 }
 
 Assert-True ($configText -match '(?m)^\s*\$SubtitleSourceMode\s*=\s*[''"]paraformer_local[''"]\s*$') '默认字幕来源必须为 paraformer_local'
-. (Join-Path $root 'config.ps1')
+. $configPath
 Assert-True (-not [string]::IsNullOrWhiteSpace($SubtitleFontName)) '字幕配置必须保存当前选择的字体名称'
 if (-not [string]::IsNullOrWhiteSpace($SubtitleFontFile)) {
     Assert-True (Test-Path -LiteralPath (Join-Path $root $SubtitleFontFile) -PathType Leaf) '字幕配置指定的便携字体文件必须存在'

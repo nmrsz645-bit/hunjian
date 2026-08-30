@@ -4,7 +4,7 @@ Windows 本地自动混剪程序：监控音频目录，使用本地 Paraformer 
 
 ## 交接范围
 
-本 Git 仓库只保存源码、测试、文档和示例配置。它**不包含**用户配置、音视频素材、成品、日志、工作区、发布包或 Paraformer/FFmpeg 二进制依赖。
+本 Git 仓库只保存源码、测试、文档和示例配置。它**不是完整安装包**：不包含用户配置、音视频素材、成品、日志、工作区、发布包或 Paraformer/FFmpeg 二进制依赖。
 
 新电脑需要从受控备份单独复制以下目录到项目同名位置，或按部署流程重新安装：
 
@@ -21,10 +21,10 @@ Windows 本地自动混剪程序：监控音频目录，使用本地 Paraformer 
 
 ## 首次接手
 
-1. 克隆仓库并复制 `config.example.ps1` 为 `config.ps1`。
-2. 恢复上列运行依赖；在字幕设置中执行本地检测。
+1. 克隆仓库并**直接复制文件** `config.example.ps1` 为 `config.ps1`；不要用会改变编码的编辑器另存。示例配置为 Windows PowerShell 5.1 所需的 UTF-8 BOM。
+2. 从原电脑备份恢复上列运行依赖；只要这些目标目录完整，不需要恢复 `chajia` 中的离线安装 ZIP。
 3. 按需建立 `视频位置`、`音频位置`、`完成`、`work` 目录。
-4. 运行环境检查或 10 秒测试，再开始监控。
+4. 在已恢复依赖后运行环境检查或 10 秒测试，再开始监控。`-CheckOnly` 会创建首次运行目录和本地版本备份，不是纯只读操作。
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-AutoCut.ps1 -CheckOnly
