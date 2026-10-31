@@ -119,7 +119,7 @@ try {
         Ensure-Directory (Join-Path $Root $directory)
     }
 
-    Install-ArchiveComponent 'ffmpeg' 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.1-essentials_build.zip' 'FEC81AE03971D9DD4BE3EBE02E263BD2EC1D789483F931BDBA5F5715E65DA2E9' (Join-Path $Root 'tools\ffmpeg') 'bin\ffmpeg.exe' 2
+    Install-ArchiveComponent 'ffmpeg' 'https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-8.1.2-essentials_build.zip' 'DB580001CAA24AC104C8CB856CD113A87B0A443F7BDF47D8C12B1D740584A2EC' (Join-Path $Root 'tools\ffmpeg') 'bin\ffmpeg.exe' 2
     Install-ArchiveComponent 'whisper' 'https://github.com/ggml-org/whisper.cpp/releases/download/b4938/whisper-bin-x64.zip' 'C2A4B60EDB11F7E11A9191FFB50929535527D4D91C9903DBE3E554583BBBC63D' (Join-Path $Root 'tools\whisper') 'whisper-cli.exe' 1
     Install-ArchiveComponent 'opencc' 'https://github.com/BYVoid/OpenCC/releases/download/ver.1.4.2/OpenCC-1.4.2-windows-x64-portable.zip' 'DAB0142FF6401219A5E556CEE215323753EEAC38752DDE4CFDDF8035746605F1' (Join-Path $Root 'tools\opencc') 'bin\opencc.exe' 2
 

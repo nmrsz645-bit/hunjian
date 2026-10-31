@@ -6,6 +6,8 @@
 & "$PSScriptRoot\Test-Subtitle-UI.ps1"
 & "$PSScriptRoot\Test-Paraformer-SharedRead.ps1"
 & "$PSScriptRoot\Test-Paraformer-Offline.ps1"
+& "$PSScriptRoot\Test-Paraformer-EmptySpeech.ps1"
+& "$PSScriptRoot\Test-Paraformer-EmptySpeechRepair.ps1"
 & "$PSScriptRoot\Test-Paraformer-Invocation.ps1"
 & "$PSScriptRoot\Test-Paraformer-SingleLoad.ps1"
 & "$PSScriptRoot\Test-LongAudio-Rendering.ps1"

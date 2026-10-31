@@ -2,6 +2,14 @@
 
 > **新会话先读：**以本节和根目录 [HANDOFF.md](HANDOFF.md) 为当前交接依据；下方内容是按日期保留的历史发布、故障和验证记录。不得把较早的“当前结论”或“下一步”当作当前任务。
 
+## 2026-10-31：GitHub 候选发布准备（Paraformer 空语音修复）
+
+- 候选版本：`v1.0.68-rc.1`（GitHub prerelease）；线上 OSS 正式版本仍为 `1.0.67`，不得混淆。
+- 修复范围：`paraformer_worker.py` 对空 `sentence_info` 或空文本写入空 SRT/JSON 并返回；`AutoCut.ps1` 跳过空 chunk SRT，整条无可烧录字幕时继续生成无字幕视频。末尾极短/静音音频不再导致 Paraformer 批次失败。
+- 新增回归：`Test-Paraformer-EmptySpeech.ps1`、`Test-Paraformer-EmptySpeechRepair.ps1`；一键修复包只替换 `AutoCut.ps1` 和 `tools\paraformer\paraformer_worker.py`，先备份，且不触碰配置、素材、日志、runtime、model_cache、downloads。
+- GitHub 包构建入口：`tools\Build-GitHubRelease.ps1`；包审计入口：`tests\Test-GitHubReleasePackage.ps1`。发布候选前必须执行完整回归、桌面构建、归档审计和敏感信息检查。
+- 本轮 GitHub 发布不等于 OSS 发布：不得更新下载站、`latest.json`、catalog 或运行中的程序。
+
 ## 当前交接快照（2026-08-31）
 
 ### 当前目标

@@ -9,7 +9,7 @@ $paraformerSetup = [IO.File]::ReadAllText((Join-Path $root 'tools\paraformer\Set
 
 foreach ($expected in @(
     'config.example.ps1',
-    'ffmpeg-9.0.1-essentials_build.zip',
+    'ffmpeg-8.1.2-essentials_build.zip',
     'whisper-bin-x64.zip',
     'OpenCC-1.4.2-windows-x64-portable.zip',
     'ggml-tiny.bin',

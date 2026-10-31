@@ -107,9 +107,6 @@ def generate_subtitles(model, device: str, cache_root: Path, audio_path: str):
 def write_subtitles(result, audio_path: str, srt_path: str, json_path: str):
     data = result[0]
     sentences = data.get("sentence_info", [])
-    if not sentences:
-        raise RuntimeError(f"Paraformer 未返回句级时间戳：{audio_path}")
-
     Path(json_path).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     blocks = []
     for index, sentence in enumerate(sentences, 1):
@@ -119,10 +116,12 @@ def write_subtitles(result, audio_path: str, srt_path: str, json_path: str):
         start = sentence.get("start", sentence.get("start_time", 0))
         end = sentence.get("end", sentence.get("end_time", start + 1_000))
         blocks.append(f"{index}\n{srt_time(start)} --> {srt_time(end)}\n{text}")
+    Path(srt_path).write_text("\n\n".join(blocks) + ("\n" if blocks else ""), encoding="utf-8")
     if not blocks:
-        raise RuntimeError(f"Paraformer 未返回可用字幕文本：{audio_path}")
-    Path(srt_path).write_text("\n\n".join(blocks) + "\n", encoding="utf-8")
+        print(f"Paraformer 未检测到语音，已生成空字幕：{audio_path}")
+        return False
     print(f"完成：{audio_path}")
+    return True
 
 
 def main():

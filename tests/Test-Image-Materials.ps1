@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $autoCut = [IO.File]::ReadAllText((Join-Path $root 'AutoCut.ps1'), [Text.Encoding]::UTF8)
 $manager = [IO.File]::ReadAllText((Join-Path $root 'AutoCut-Manager.ps1'), [Text.Encoding]::UTF8)
-$config = [IO.File]::ReadAllText((Join-Path $root 'config.ps1'), [Text.Encoding]::UTF8)
+$config = [IO.File]::ReadAllText((Join-Path $root 'config.example.ps1'), [Text.Encoding]::UTF8)
 
 Assert-True ($autoCut -match '\$ImageExts') 'Image extensions missing'
 Assert-True ($autoCut -match 'ImageDurationSeconds') 'Image duration setting missing'
@@ -37,7 +37,7 @@ Assert-True ($manager -match 'AtmosphereEffectMode') 'Manager atmosphere mode se
 Assert-True ($autoCut -match 'Select-AtmosphereEffect') 'Atmosphere effect selector missing'
 Assert-True ($autoCut -match "'snow'.*'rain'.*'petals'.*'fireworks'") 'Atmosphere library categories missing'
 Assert-True ($autoCut.Contains('fontcolor=$($settings.Color)') -and $autoCut.Contains('mod($x+t*$xSpeed,$Width)')) 'Atmosphere particles must use the configured color and animated coordinates'
-Assert-True ($config -match '\$ClipMode\s*=\s*"random"') 'Default clip mode missing'
+Assert-True ($config -match '\$ClipMode\s*=\s*[\x27"]random[\x27"]') 'Default clip mode missing'
 Assert-True ($autoCut -match '\$ClipMode\s*-eq\s*"whole"') 'Whole-source rendering mode missing'
 Assert-True ($manager -match 'chkWholeSource') 'Manager whole-source toggle missing'
 Assert-True ($manager -match 'ClipMode\s*=\s*if \(\$chkWholeSource\.Checked\)') 'Manager whole-source toggle is not saved'

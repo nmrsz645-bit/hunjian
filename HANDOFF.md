@@ -5,8 +5,17 @@
 ## 当前状态与目标
 
 - Git `main` 是唯一源码版本依据；接手时执行 `git status --short`、`git pull --ff-only` 和 `git rev-parse HEAD` 获取当前提交。不要依赖文档中会过期的固定提交号。
-- 当前目标是维持已验证的源码与交接能力。**没有待发布版本**；除非用户明确授权，不创建更新包、不上传 OSS、不改 `latest.json`/catalog，也不通知更新程序。
+- GitHub 候选发布为 `v1.0.68-rc.1`。它包含 Paraformer 空语音修复、完整源码、Windows x64 包、一键修复包和校验值；线上 OSS 正式版仍是 `1.0.67`，本候选不改变 `latest.json`/catalog 或自动更新。
+- 若要得到候选的实际提交，执行 `git fetch --tags origin; git rev-list -n 1 v1.0.68-rc.1`；不要把 UI 的 `V16.1.15` 展示文案误当成 OSS 更新版本号。
 - 已完成最后一轮稳定性修复：监控 TXT 安全删除、渲染总超时、短任务防重入、单长素材不重叠取材、示例配置模型路径和源码 CI。
+
+## 架构、依赖与修改入口
+
+- **桌面层：**`desktop-src\Program.cs` 是 .NET 8 Windows Forms 管理界面；Release 构建命令是 `dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release`，GitHub 包使用 `dotnet publish -r win-x64 --self-contained true -p:PublishSingleFile=true`。
+- **流程层：**`AutoCut.ps1` 负责取材、字幕、FFmpeg 渲染和成品发布；`Auto-Monitor.ps1` 负责目录监控与失败重试；`AutoCut-Manager.ps1` 是旧版 PowerShell 管理界面；`Start-AutoCut.ps1` 做环境检测和启动。
+- **字幕层：**`tools\paraformer\paraformer_worker.py` 负责本地 Paraformer 输出 JSON/SRT，`Subtitle-Core.psm1` 处理字幕时间轴，`Subtitle-Aliyun.psm1` 是可选云端路径。末尾静音或无语音 chunk 现在写空 SRT 并让渲染继续，不得再把它视为整条任务失败。
+- **运行依赖：**Windows 10/11 x64、Windows PowerShell 5.1、.NET SDK 8（仅开发/构建）、FFmpeg、Whisper、OpenCC、Paraformer Python/PyTorch/模型。`Initialize-NewComputer.ps1` 下载普通依赖；Paraformer 优先离线恢复。
+- **配置与密钥：**只从 `config.example.ps1` 生成本机 `config.ps1`。阿里云 API Key 只能保存到本机环境/配置约定位置；提交前用 `git diff --cached` 审查，绝不提交真实 Key、token、cookie、浏览器资料或用户数据。
 
 ## 第一条操作
 
@@ -77,6 +86,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-AutoCut.ps1 -Tes
 - 单素材长音频已真实通过；渲染任务上限为 `max(30 分钟, 音频时长×3+10 分钟)`，最大 12 小时，超时后按原补剪流程处理。
 - GitHub Actions 工作流只检查源码、交接文件和桌面构建；它无法替代含真实模型、GPU、音视频的隔离验收。
 - 历史线上版本记录可能不同步；需要发布时必须重新读取公网清单和对象 SHA-256。
+- GitHub 预发布包不含 Paraformer `runtime`、`model_cache`、`downloads`，不是离线全量模型包；它能在恢复离线包或完成初始化后运行。
 
 ## 严禁误动的数据
 
@@ -96,3 +106,16 @@ git log --oneline -4
 ```
 
 涉及模型、字幕、长音频、GPU、更新器或发布时，必须额外做隔离真实运行或隔离升级，不可只凭测试通过或进程启动宣布完成。
+
+## GitHub 候选构建与发布
+
+仅在用户明确授权发布 GitHub 候选时执行，且不得触碰 OSS：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-All.ps1
+dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-GitHubRelease.ps1 -OutputDirectory ..\release-artifacts
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-GitHubReleasePackage.ps1 -ArchivePath ..\release-artifacts\hun-jian-v1.0.68-rc.1-windows-x64.zip -ChecksumPath ..\release-artifacts\hun-jian-v1.0.68-rc.1-windows-x64.sha256
+```
+
+发布前检查 release ZIP、repair ZIP、`.sha256` 文件和 `git diff --cached --name-only`；发布后回读 `origin/main`、tag、Release 附件下载地址与 SHA-256。候选 Release 必须标记为 prerelease，描述必须写明 OSS 仍为 1.0.67。

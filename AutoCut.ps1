@@ -1135,6 +1135,7 @@ function Invoke-ParaformerBatch($Entries, [double]$Duration, [string]$Diagnostic
 function Merge-ParaformerChunkSrt($Chunks, [string]$DestinationSrt) {
     $merged = @()
     foreach ($chunk in @($Chunks)) {
+        if (-not (Test-Path -LiteralPath $chunk.Srt -PathType Leaf) -or (Get-Item -LiteralPath $chunk.Srt).Length -eq 0) { continue }
         $merged += @(Subtitle-Core\Convert-SrtToSegments -SrtPath $chunk.Srt -PreserveEvents | Where-Object {
             $globalStart = $_.Start + $chunk.Start
             $globalEnd = $_.End + $chunk.Start
@@ -1148,8 +1149,12 @@ function Merge-ParaformerChunkSrt($Chunks, [string]$DestinationSrt) {
         })
     }
     $merged = @($merged | Where-Object { $_.End -gt $_.Start } | Sort-Object Start, End)
-    if ($merged.Count -eq 0) { throw 'Paraformer 分段识别没有返回字幕。' }
+    if ($merged.Count -eq 0) {
+        [IO.File]::WriteAllText($DestinationSrt, '', [Text.UTF8Encoding]::new($false))
+        return $false
+    }
     Subtitle-Core\New-SrtFromSegments -Segments $merged -Destination $DestinationSrt
+    return $true
 }
 
 function Invoke-ChunkedParaformerSrt($AudioFile, [double]$Duration, [string]$DestinationSrt, [string]$DiagnosticsDir = '') {
@@ -1208,6 +1213,10 @@ function Prepare-Subtitle($AudioFile, [double]$Duration, $DestinationSrt, [bool]
             Invoke-ChunkedParaformerSrt $AudioFile $Duration $DestinationSrt $DiagnosticsDir
         } else {
             Invoke-ParaformerSrt $AudioFile $Duration $DestinationSrt $IsTestMode $DiagnosticsDir
+        }
+        if ((Get-Item -LiteralPath $DestinationSrt -ErrorAction Stop).Length -eq 0) {
+            Write-Log 'Paraformer 未检测到可烧录语音，本条视频将不添加字幕。'
+            return $false
         }
         $segments = @(Subtitle-Core\Convert-SrtToSegments -SrtPath $DestinationSrt -SplitOptions (Get-SubtitleSplitOptions) -MinimumDuration ([double]$SubtitleMinimumDuration))
         $segments = @(Subtitle-Core\Limit-SubtitleSegments -Segments $segments -Duration $Duration)
