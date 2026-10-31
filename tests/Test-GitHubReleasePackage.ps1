@@ -5,7 +5,10 @@ param(
     [string]$ArchivePath,
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string]$ChecksumPath
+    [string]$ChecksumPath,
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$RepairPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,6 +19,7 @@ $builder = Join-Path $root 'tools\Build-GitHubRelease.ps1'
 Assert-True (Test-Path -LiteralPath $builder -PathType Leaf) 'GitHub release builder is missing.'
 Assert-True (Test-Path -LiteralPath $ArchivePath -PathType Leaf) "Release archive is missing: $ArchivePath"
 Assert-True (Test-Path -LiteralPath $ChecksumPath -PathType Leaf) "Release checksum manifest is missing: $ChecksumPath"
+Assert-True (Test-Path -LiteralPath $RepairPath -PathType Leaf) "Standalone repair archive is missing: $RepairPath"
 
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ('hun-jian-github-release-audit-' + [guid]::NewGuid().ToString('N'))
 try {
@@ -79,6 +83,15 @@ try {
     $handoff = [IO.File]::ReadAllText((Join-Path $appRoot 'HANDOFF.md'), [Text.Encoding]::UTF8)
     Assert-True ($readme -match '1\.0\.68-rc\.1') 'README must identify the GitHub prerelease version.'
     Assert-True ($handoff -match 'Paraformer' -and $handoff -match '1\.0\.68-rc\.1') 'HANDOFF must describe Paraformer and this prerelease.'
+
+    $repairRoot = Join-Path $tempRoot 'repair'
+    Expand-Archive -LiteralPath $RepairPath -DestinationPath $repairRoot -Force
+    foreach ($requiredRepairFile in @('DoubleClick-Repair.bat', 'OneClick-Paraformer-EmptySpeechRepair.ps1', 'Apply-Paraformer-EmptySpeechRepair.ps1', 'payload\AutoCut.ps1', 'payload\tools\paraformer\paraformer_worker.py', 'manifest.json')) {
+        Assert-True (Test-Path -LiteralPath (Join-Path $repairRoot $requiredRepairFile) -PathType Leaf) "Standalone repair archive is missing: $requiredRepairFile"
+    }
+    foreach ($forbiddenRepairPath in @('payload\config.ps1', 'payload\tools\paraformer\runtime', 'payload\tools\paraformer\model_cache', 'payload\tools\paraformer\downloads')) {
+        Assert-True (-not (Test-Path -LiteralPath (Join-Path $repairRoot $forbiddenRepairPath))) "Standalone repair archive contains protected data: $forbiddenRepairPath"
+    }
 } finally {
     Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
 }

@@ -135,7 +135,9 @@ $installReadme = @(
 
     & (Join-Path $root 'repairs\Build-Paraformer-EmptySpeechRepair.ps1') -OutputDirectory $repairOutput -Version $Version
     if ($LASTEXITCODE -ne 0) { throw "Repair package build failed with exit code $LASTEXITCODE." }
-    Copy-Item -LiteralPath (Join-Path $repairOutput $repairName) -Destination (Join-Path $installRoot $repairName) -Force
+    $repairPath = Join-Path $resolvedOutput $repairName
+    Copy-Item -LiteralPath (Join-Path $repairOutput $repairName) -Destination $repairPath -Force
+    Copy-Item -LiteralPath $repairPath -Destination (Join-Path $installRoot $repairName) -Force
 
     $checksums = Get-ChildItem -LiteralPath $installRoot -Recurse -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object {
         $relative = $_.FullName.Substring($installRoot.Length + 1).Replace('\', '/')
