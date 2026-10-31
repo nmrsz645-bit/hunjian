@@ -2,6 +2,8 @@
 
 本文件是新会话和新电脑的单一接手入口；历史细节见 `TIMEOFF.md`。原开发电脑的规范源目录为 `E:\自动化\混剪\自动剪辑桌面版_V16`；新电脑以自己的克隆目录为项目根目录。Git 远端为 `https://github.com/nmrsz645-bit/hunjian.git`。
 
+新 Windows 电脑接手、GitHub 候选发布、OSS 正式更新和下载站发布的可执行边界见 [docs/RELEASE-GUIDE.md](docs/RELEASE-GUIDE.md)。先读该指南再做任何上传；`git push`、GitHub Release、客户端清单和网站卡片不是同一项操作。
+
 ## 当前状态与目标
 
 - Git `main` 是唯一源码版本依据；接手时执行 `git status --short`、`git pull --ff-only` 和 `git rev-parse HEAD` 获取当前提交。不要依赖文档中会过期的固定提交号。

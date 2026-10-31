@@ -5,10 +5,12 @@ $root = Split-Path -Parent $PSScriptRoot
 $exampleConfig = Join-Path $root 'config.example.ps1'
 $readme = Join-Path $root 'README.md'
 $handoff = Join-Path $root 'HANDOFF.md'
+$releaseGuide = Join-Path $root 'docs\RELEASE-GUIDE.md'
 $ignore = Join-Path $root '.gitignore'
 
 Assert-True (Test-Path -LiteralPath $exampleConfig -PathType Leaf) '交接必须包含示例配置'
 Assert-True (Test-Path -LiteralPath $handoff -PathType Leaf) '交接必须包含总交接文档'
+Assert-True (Test-Path -LiteralPath $releaseGuide -PathType Leaf) '交接必须包含发布与网站指南'
 $bytes = [IO.File]::ReadAllBytes($exampleConfig)
 Assert-True ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) '示例配置必须为Windows PowerShell 5.1可读的UTF-8 BOM'
 . $exampleConfig
@@ -30,6 +32,12 @@ foreach ($expected in @('## 第一条操作', '## 新电脑接手与运行', '##
 Assert-True ($handoffText.Contains("Set-Location '<你的克隆目录>'")) '第一条操作必须可在新电脑的克隆目录执行'
 Assert-True (-not $handoffText.Contains("Set-Location 'E:\自动化\混剪\自动剪辑桌面版_V16'")) '第一条操作不能写死原开发电脑路径'
 Assert-True (-not $handoffText.Contains('d36da04a98d385172edfda74411aa013d11d7c44')) '总交接文档不能依赖已过期的固定提交号'
+$releaseGuideText = [IO.File]::ReadAllText($releaseGuide, [Text.Encoding]::UTF8)
+foreach ($expected in @('## 新 Windows 电脑接手', '## GitHub 候选发布', '## OSS 正式更新', '## 下载站与网站发布', '## 凭据与安全')) {
+    Assert-True ($releaseGuideText.Contains($expected)) "发布与网站指南必须包含：$expected"
+}
+Assert-True ($readmeText.Contains('docs/RELEASE-GUIDE.md')) 'README必须链接发布与网站指南'
+Assert-True ($handoffText.Contains('docs/RELEASE-GUIDE.md')) '总交接文档必须链接发布与网站指南'
 
 $ignoreText = [IO.File]::ReadAllText($ignore, [Text.Encoding]::UTF8)
 foreach ($path in @('config.ps1', 'logs/', 'work/', 'tools/paraformer/runtime/', 'tools/paraformer/model_cache/', 'fonts/UserAdded/')) {

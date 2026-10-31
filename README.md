@@ -61,6 +61,8 @@ dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release
 
 完整接手入口见 [HANDOFF.md](HANDOFF.md)；按日期保留的进度、发布验证和已知限制见 [TIMEOFF.md](TIMEOFF.md) 顶部快照；发布更新的专门交接信息见 [UPDATER_HANDOFF.md](UPDATER_HANDOFF.md)。
 
+新 Windows 电脑接手、GitHub 候选包、OSS 正式更新和下载站边界见 [docs/RELEASE-GUIDE.md](docs/RELEASE-GUIDE.md)。该指南明确区分 GitHub RC、OSS 正式版与网站卡片，`git push` 不等于客户端更新已发布。
+
 ## 当前重要决定
 
 - 当前线上版本为 1.0.67；运行中的程序不自动下载、替换或重启，程序完全退出后才由启动入口检查更新。
