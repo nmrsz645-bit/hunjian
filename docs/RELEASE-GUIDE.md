@@ -96,6 +96,17 @@ gh release create "v<候选版本>" `
 
 发布后回读 tag 指向的提交、Release 是否为 prerelease、三个附件的 HTTP 200/长度/SHA-256。GitHub `v1.0.68-rc.1` 与 OSS `1.0.67` 必须分开报告。
 
+## 本机可恢复工具链复核（2026-10-31）
+
+应分开处理 GitHub 候选包与 OSS 生产更新，不能把两者合称为“全部工具缺失”：
+
+- **已有且可恢复的候选制包链**：`desktop-src/AutoCutDesktop.csproj`、`desktop-src/Program.cs` 和 `tools/Build-GitHubRelease.ps1`。后者实际调用 .NET 8 `dotnet publish`，生成候选根 `Start.cmd`、`Initialize-Dependencies.bat`、`app/version.json`、完整 ZIP、SHA-256 及 Paraformer 修复 ZIP。这些生成器、初始化与修复脚本均有源码；不是只能复制历史二进制。
+- **已有运行依赖**：本机原源码目录 `C:\AutoCut\hunjian` 已核对 .NET SDK 8.0.425、PowerShell 5.1、FFmpeg、Whisper、OpenCC、Paraformer 便携 Python 与三套模型；依赖版本及迁移限制见本指南前文。本轮仅复用此前候选构建与 20 项测试记录，没有再次构建、加载模型或处理真实媒体。
+- **源码确实尚缺的生产链**：生成生产 `updater/UpdateAgent.exe` 的原始工程及构建输入（源文件的实际原名未确认）、生产 `updater/updater-config.json` 与外层 `Start.cmd` 的可审计模板/生成器、OSS 完整包/增量 `app.zip` 制包器及其 manifest/上传实现。当前候选生成的 `Start.cmd` 是隔离候选入口，不能冒充生产旧客户端入口。`AutoUpdate.ps1` 只是禁用运行中更新的告知脚本，不是外层生产更新器。
+- **本轮核对范围**：当前仓库全部受控脚本与工程文件、`C:\AutoCut` 下已有发布/修复目录，以及“更新”项目中已授权相关候选/工具目录。跨项目目录仅发现混剪 catalog 条目，没有找到可恢复的混剪生产工程；已打包候选、其他程序的更新器及合成 manifest 均不作替代。
+
+候选完整包可以按上文真实脚本继续隔离构建；从该仓库独立重建生产更新器、制作并验收新的 OSS 增量更新仍缺上述原始输入。下一步需要相应自有源码仓库、分支或工具目录，不能通过重写同名实现补齐来源。
+
 ## OSS 正式更新
 
 ### 已核对的生产对象
