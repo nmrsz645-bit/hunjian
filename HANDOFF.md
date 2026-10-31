@@ -61,11 +61,18 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-AutoCut.ps1 -Tes
 
 ## 已完成验证
 
-- Windows PowerShell：`tests\Test-All.ps1` 20 项通过。
+### 本轮 GitHub RC 实际验证（v1.0.68-rc.1）
+
+- Windows PowerShell：`tests\Test-All.ps1` 20 项通过，其中包括空语音 worker、空语音一键修复包和既有回归。
 - 桌面端：`dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release`，0 警告、0 错误。
-- GitHub 远端新克隆：`tests\Test-Handover.ps1` 与桌面构建通过；示例配置 BOM 正确，模型/用户数据未进入仓库。
-- 真实隔离验证：15 分 05 秒 MP3，唯一 15 分 10 秒素材，Paraformer-large、NVENC、随机不重叠取材，输出 905 秒 H.264/AAC 成片。字幕在第 7 分 30 秒和第 15 分钟画面已确认烧录；Paraformer 模型缓存 31 文件 SHA-256 无差异。
-- 证据目录：`D:\ui\temp\hun_jian_long_source_stability_20260831`；真实成片：`完成\《真实长音频单素材》\真实长音频单素材.mp4`。
+- 发布包：`tools\Build-GitHubRelease.ps1` 构建 Windows x64 自包含 EXE、独立修复 ZIP 和 SHA-256；`tests\Test-GitHubReleasePackage.ps1` 解压审计通过，确认不含配置、素材、日志、用户工作区或 Paraformer `runtime`/`model_cache`/`downloads`。
+- GitHub：`main`、annotated tag、prerelease 附件和 Release 下载链接均已回读；GitHub Actions 的源码检查与桌面构建通过。
+- **未执行：**本轮没有在全新机器上用完整 Paraformer 运行时/三套模型重跑真实音频、GPU/NVENC 和成片端到端验收。GitHub 包不含这些大型机器专属目录；使用前必须恢复受控离线包，或完成 `Initialize-NewComputer.ps1` 初始化后自行验收。
+
+### 历史验证记录（不是本轮 RC 验收）
+
+- 2026-08-31 曾对当时源码进行真实隔离验证：15 分 05 秒 MP3、唯一 15 分 10 秒素材、Paraformer-large、NVENC、随机不重叠取材，输出 905 秒 H.264/AAC 成片；字幕在第 7 分 30 秒和第 15 分钟画面已确认烧录，Paraformer 模型缓存 31 文件 SHA-256 无差异。
+- 历史证据目录：`D:\ui\temp\hun_jian_long_source_stability_20260831`；历史成片：`完成\《真实长音频单素材》\真实长音频单素材.mp4`。它只能说明当时的验证，不得作为 `v1.0.68-rc.1` 的模型/媒体 E2E 证据。
 
 ## 关键文件
 
@@ -115,7 +122,7 @@ git log --oneline -4
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-All.ps1
 dotnet build .\desktop-src\AutoCutDesktop.csproj -c Release
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-GitHubRelease.ps1 -OutputDirectory ..\release-artifacts
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-GitHubReleasePackage.ps1 -ArchivePath ..\release-artifacts\hun-jian-v1.0.68-rc.1-windows-x64.zip -ChecksumPath ..\release-artifacts\hun-jian-v1.0.68-rc.1-windows-x64.sha256
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-GitHubReleasePackage.ps1 -ArchivePath ..\release-artifacts\hun-jian-v1.0.68-rc.1-windows-x64.zip -ChecksumPath ..\release-artifacts\hun-jian-v1.0.68-rc.1-windows-x64.sha256 -RepairPath ..\release-artifacts\hun-jian-paraformer-empty-speech-repair-1.0.68-rc.1.zip
 ```
 
 发布前检查 release ZIP、repair ZIP、`.sha256` 文件和 `git diff --cached --name-only`；发布后回读 `origin/main`、tag、Release 附件下载地址与 SHA-256。候选 Release 必须标记为 prerelease，描述必须写明 OSS 仍为 1.0.67。
