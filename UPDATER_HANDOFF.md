@@ -1,6 +1,8 @@
 # 更新发布交接
 
-本文件只说明混剪桌面版的发布和更新边界；具体开发进度以 `TIMEOFF.md` 为准。
+本文件只说明混剪桌面版的发布和更新边界；当前交接以 `HANDOFF.md` 为准，实际上传步骤、OSS对象路径和缺失工具详见 [docs/RELEASE-GUIDE.md](docs/RELEASE-GUIDE.md)。历史进度保留在 `TIMEOFF.md`。
+
+2026-11-01 已确认：源码包含 GitHub RC 构建器，缺少生产 `updater/UpdateAgent.exe` 的原始工程、生产外层 `Start.cmd`/`updater-config.json` 模板及 OSS 完整/增量制包器和上传器。不得用候选入口或其他产品更新器代替。下面的生产验证记录不是宣称当前仓库能独立重建生产链。
 
 ## 当前已验证状态
 
